@@ -1,0 +1,11 @@
+<div class="grid grid-cols-3">
+  @for (product of products; track product.id) {
+  <app-product
+    [title]="product.title"
+    [description]="product.description"
+    [price]="product.price"
+    [img]="product.img"
+    (addCart)="fromChild($event)"
+  />
+  }
+</div>
