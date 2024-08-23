@@ -1,46 +1,62 @@
-import { Component } from '@angular/core';
-import { ProductComponent } from '../../components/product/product.component';
+import { RouterLinkWithHref } from '@angular/router';
+
+import { Component, inject, Input, signal, SimpleChanges } from '@angular/core';
+import { ProductComponent } from '@products/components/product/product.component';
+import { Product } from '@shared/interfaces/product.interface';
+import { HeaderComponent } from '@shared/components/header/header.component';
+import { CartService } from '@shared/services/cart.service';
+import { ProductService } from '@shared/services/product.service';
+import { CategoryService } from '@shared/services/category.service';
+import { Category } from '@shared/interfaces/category.interface';
 
 @Component({
   selector: 'app-list',
   standalone: true,
-  imports: [ProductComponent],
+  imports: [
+    RouterLinkWithHref,
+    ProductComponent,
+    HeaderComponent
+],
   templateUrl: './list.component.html',
   styleUrl: './list.component.css',
 })
-export class ListComponent {
-  products = [
-    {
-      id: 1,
-      title: 'Produtco 1',
-      price: 2000,
-      description: 'Lorem ipsum dolor',
-      img: `https://picsum.photos/640/640?r=${Math.random()}`,
-    },
-    {
-      id: 2,
-      title: 'Producto 2',
-      price: 1500,
-      description: 'Lorem ipsum dolor',
-      img: `https://picsum.photos/640/640?r=${Math.random()}`,
-    },
-    {
-      id: 3,
-      title: 'Producto 3',
-      price: 3000,
-      description: 'Lorem ipsum dolor',
-      img: `https://picsum.photos/640/640?r=${Math.random()}`,
-    },
-    {
-      id: 4,
-      title: 'Producto 4',
-      price: 2500,
-      description: 'Lorem ipsum dolor',
-      img: `https://picsum.photos/640/640?r=${Math.random()}`,
-    },
-  ];
+export default class ListComponent {
+  products = signal<Product[]>([]);
+  categories = signal<Category[]>([]);
 
-  fromChild(event: string) {
-    console.log('Received from child:', event);
+  private cartService = inject(CartService);
+  private productService = inject(ProductService);
+  private categoryService = inject(CategoryService);
+
+  @Input('category_id') categoryId?: string;
+
+  ngOnInit(): void {
+    this.getCategories();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.getProducts();
+  }
+
+  addToCart(product: Product) {
+    this.cartService.addProduct(product);
+  }
+
+  getProducts() {
+    this.productService.getProducts(this.categoryId).subscribe({
+      next: (products) => {
+        this.products.set(products);
+      },
+      error: (error) => console.error('Error fetching products:', error),
+    });
+  }
+
+  getCategories() {
+    this.categoryService.getCategories().subscribe({
+      next: (categories) => {
+        this.categories.set(categories);
+      },
+      error: (error) => console.error('Error fetching categories:', error),
+    });
   }
 }
